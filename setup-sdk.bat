@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo  X-Plane SDK Setup Script for TrimGear
+echo  X-Plane SDK Setup Script for GlideStop
 echo ========================================
 echo.
 
@@ -98,7 +98,7 @@ if exist "SDK\CHeaders\XPLM\XPLMPlugin.h" (
     echo.
     echo SDK installed in: SDK\
     echo.
-    echo You can now run build.bat to compile the TrimGear plugin
+    echo You can now run build.bat to compile the GlideStop plugin
     echo.
 ) else (
     echo ❌ SDK installation verification failed
