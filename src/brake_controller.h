@@ -29,7 +29,7 @@ private:
         XPLMDataRef left_brake_ratio;       // sim/cockpit2/controls/left_brake_ratio
         XPLMDataRef right_brake_ratio;      // sim/cockpit2/controls/right_brake_ratio
         XPLMDataRef yoke_pitch_ratio;       // sim/joystick/yoke_pitch_ratio
-        XPLMDataRef yoke_roll_ratio;        // sim/joystick/yoke_roll_ratio (rudder input)
+        XPLMDataRef yoke_heading_ratio;     // sim/joystick/yoke_heading_ratio (rudder input)
         XPLMDataRef throttle_ratio_all;     // sim/cockpit2/engine/actuators/throttle_ratio_all
         XPLMDataRef true_airspeed_kts;      // sim/cockpit2/gauges/indicators/true_airspeed_kts_pilot
     };

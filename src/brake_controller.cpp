@@ -14,7 +14,7 @@ BrakeController::BrakeController()
     m_datarefs.left_brake_ratio = nullptr;
     m_datarefs.right_brake_ratio = nullptr;
     m_datarefs.yoke_pitch_ratio = nullptr;
-    m_datarefs.yoke_roll_ratio = nullptr;
+    m_datarefs.yoke_heading_ratio = nullptr;
     m_datarefs.throttle_ratio_all = nullptr;
     m_datarefs.true_airspeed_kts = nullptr;
 }
@@ -33,7 +33,7 @@ bool BrakeController::initialize() {
     m_datarefs.left_brake_ratio = XPLMFindDataRef("sim/cockpit2/controls/left_brake_ratio");
     m_datarefs.right_brake_ratio = XPLMFindDataRef("sim/cockpit2/controls/right_brake_ratio");
     m_datarefs.yoke_pitch_ratio = XPLMFindDataRef("sim/joystick/yoke_pitch_ratio");
-    m_datarefs.yoke_roll_ratio = XPLMFindDataRef("sim/joystick/yoke_roll_ratio");
+    m_datarefs.yoke_heading_ratio = XPLMFindDataRef("sim/joystick/yoke_heading_ratio");
     m_datarefs.throttle_ratio_all = XPLMFindDataRef("sim/cockpit2/engine/actuators/throttle_ratio_all");
     m_datarefs.true_airspeed_kts = XPLMFindDataRef("sim/cockpit2/gauges/indicators/true_airspeed_kts_pilot");
 
@@ -55,8 +55,8 @@ bool BrakeController::initialize() {
         XPLMDebugString("GlideStop: ERROR - Could not find dataref: sim/joystick/yoke_pitch_ratio\n");
         success = false;
     }
-    if (!m_datarefs.yoke_roll_ratio) {
-        XPLMDebugString("GlideStop: ERROR - Could not find dataref: sim/joystick/yoke_roll_ratio\n");
+    if (!m_datarefs.yoke_heading_ratio) {
+        XPLMDebugString("GlideStop: ERROR - Could not find dataref: sim/joystick/yoke_heading_ratio\n");
         success = false;
     }
     if (!m_datarefs.throttle_ratio_all) {
@@ -93,7 +93,7 @@ void BrakeController::update() {
 
     // Get current inputs
     float pitch_input = get_input_value(m_datarefs.yoke_pitch_ratio);
-    float yaw_input = get_input_value(m_datarefs.yoke_roll_ratio);
+    float yaw_input = get_input_value(m_datarefs.yoke_heading_ratio);
     float airspeed_factor = get_airspeed_factor();
     
     // Calculate brake values based on inputs
