@@ -22,10 +22,22 @@ bool Config::load_config() {
     
     std::ifstream config_file(config_path);
     if (!config_file.is_open()) {
-        std::string log_msg = "GlideStop: Config file not found, using defaults: " + config_path + "\n";
+        std::string log_msg = "GlideStop: Config file not found: " + config_path + ", creating default config\n";
         XPLMDebugString(log_msg.c_str());
+        
         reset_to_defaults();
-        return true; // Not an error, just use defaults
+        
+        if (!create_default_config()) {
+            return true; // Use defaults if we can't create config
+        }
+        
+        // Try to open the newly created file
+        config_file.open(config_path);
+        if (!config_file.is_open()) {
+            std::string error_msg = "GlideStop: WARNING - Could not open newly created config file, using defaults\n";
+            XPLMDebugString(error_msg.c_str());
+            return true; // Use defaults
+        }
     }
 
     reset_to_defaults();
@@ -105,8 +117,8 @@ std::string Config::get_aircraft_directory() const {
     
     std::string aircraft_path(path);
     if (!aircraft_path.empty()) {
-        // Remove the filename to get just the directory
-        size_t last_slash = aircraft_path.find_last_of('/');
+        // The path includes the .acf filename, extract just the directory
+        size_t last_slash = aircraft_path.find_last_of("/\\");
         if (last_slash != std::string::npos) {
             aircraft_path = aircraft_path.substr(0, last_slash);
         }
@@ -122,6 +134,72 @@ std::string Config::get_config_file_path() const {
     }
     
     return aircraft_dir + "/GlideStop.cfg";
+}
+
+bool Config::create_default_config() const {
+    std::string config_file = get_config_file_path();
+    
+    // Create directory if it doesn't exist
+    std::filesystem::path config_path(config_file);
+    std::filesystem::path config_dir = config_path.parent_path();
+    
+    if (!config_dir.empty()) {
+        try {
+            std::filesystem::create_directories(config_dir);
+        } catch (const std::exception& e) {
+            std::string error_msg = "GlideStop: ERROR - Failed to create directory " + config_dir.string() + ": " + e.what() + "\n";
+            XPLMDebugString(error_msg.c_str());
+            return false;
+        }
+    }
+    
+    // Create default config file with default settings
+    std::ofstream file(config_file);
+    if (!file.is_open()) {
+        std::string error_msg = "GlideStop: ERROR - Could not create config file: " + config_file + "\n";
+        XPLMDebugString(error_msg.c_str());
+        return false;
+    }
+    
+    // Write default config with comments
+    file << "# GlideStop Configuration File\n";
+    file << "# \n";
+    file << "# This file stores settings for the GlideStop brake assistance system.\n";
+    file << "# \n";
+    file << "# enabled: true/false - Whether GlideStop is active\n";
+    file << "# wake_category: LIGHT/MEDIUM/HEAVY - Aircraft wake turbulence category\n";
+    file << "# \n";
+    file << "enabled=false\n";
+    
+    // Convert wake category enum to string
+    std::string wake_category_str;
+    switch (glidestop::constants::DEFAULT_WAKE_CATEGORY) {
+        case glidestop::constants::WakeCategory::LIGHT:
+            wake_category_str = "LIGHT";
+            break;
+        case glidestop::constants::WakeCategory::MEDIUM:
+            wake_category_str = "MEDIUM";
+            break;
+        case glidestop::constants::WakeCategory::HEAVY:
+            wake_category_str = "HEAVY";
+            break;
+        case glidestop::constants::WakeCategory::SUPER:
+            wake_category_str = "SUPER";
+            break;
+        case glidestop::constants::WakeCategory::COUNT:
+            // Should never happen, but handle it gracefully
+            wake_category_str = "MEDIUM";
+            break;
+    }
+    
+    file << "wake_category=" << wake_category_str << "\n";
+    
+    file.close();
+    
+    std::string log_msg = "GlideStop: Created default config file: " + config_file + "\n";
+    XPLMDebugString(log_msg.c_str());
+    
+    return true;
 }
 
 bool Config::parse_config_line(const std::string& line) {

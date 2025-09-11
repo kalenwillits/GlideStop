@@ -25,6 +25,7 @@ private:
     
     std::string get_aircraft_directory() const;
     std::string get_config_file_path() const;
+    bool create_default_config() const;
     bool parse_config_line(const std::string& line);
     std::string generate_config_content() const;
 };
