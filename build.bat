@@ -49,23 +49,49 @@ set COMPILER_FOUND=0
 set BUILD_GENERATOR=""
 set CMAKE_EXTRA_FLAGS=""
 
-REM Check for Visual Studio 2022
-where cl >nul 2>&1
+echo Detecting available compilers...
+
+REM 1. Try Visual Studio 2022 first
+where /q devenv 2>nul
 if !errorlevel! == 0 (
-    echo ✓ Visual Studio compiler found
-    set BUILD_GENERATOR="Visual Studio 17 2022"
-    set CMAKE_EXTRA_FLAGS=-A x64
-    set COMPILER_FOUND=1
-    goto :compiler_detected
+    for /f "tokens=*" %%i in ('where devenv 2^>nul') do (
+        if "!BUILD_GENERATOR!" == """" (
+            echo %%i | findstr /i "2022" >nul
+            if !errorlevel! == 0 (
+                set BUILD_GENERATOR="Visual Studio 17 2022"
+                set CMAKE_EXTRA_FLAGS=-A x64
+                set COMPILER_FOUND=1
+                echo ✅ Found Visual Studio 2022
+            )
+        )
+    )
 )
 
-REM Check for Visual Studio 2019
-if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019" (
-    echo ✓ Visual Studio 2019 found
-    set BUILD_GENERATOR="Visual Studio 16 2019"
-    set CMAKE_EXTRA_FLAGS=-A x64
-    set COMPILER_FOUND=1
-    goto :compiler_detected
+REM 2. Try Visual Studio 2019
+if !COMPILER_FOUND! == 0 (
+    for /f "tokens=*" %%i in ('where devenv 2^>nul') do (
+        if "!BUILD_GENERATOR!" == """" (
+            echo %%i | findstr /i "2019" >nul
+            if !errorlevel! == 0 (
+                set BUILD_GENERATOR="Visual Studio 16 2019"
+                set CMAKE_EXTRA_FLAGS=-A x64
+                set COMPILER_FOUND=1
+                echo ✅ Found Visual Studio 2019
+            )
+        )
+    )
+)
+
+REM 3. Fallback: Check for cl compiler directly
+if !COMPILER_FOUND! == 0 (
+    where cl >nul 2>&1
+    if !errorlevel! == 0 (
+        echo ✓ Visual Studio compiler found
+        set BUILD_GENERATOR="Visual Studio 17 2022"
+        set CMAKE_EXTRA_FLAGS=-A x64
+        set COMPILER_FOUND=1
+        goto :compiler_detected
+    )
 )
 
 REM Check for MinGW
