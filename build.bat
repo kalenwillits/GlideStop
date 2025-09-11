@@ -2,12 +2,12 @@
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo  TrimGear X-Plane Plugin Build Script
+echo  GlideStop X-Plane Plugin Build Script
 echo ========================================
 echo.
 
 REM Check if we're in the right directory
-if not exist "src\trimgear.cpp" (
+if not exist "src\glidestop.cpp" (
     echo ERROR: This script must be run from the project root directory
     echo Current directory: %CD%
     pause
@@ -117,7 +117,7 @@ if !errorlevel! neq 0 (
 
 REM Build the project
 echo.
-echo Building TrimGear plugin...
+echo Building GlideStop plugin...
 cmake --build . --config %BUILD_TYPE%
 if !errorlevel! neq 0 (
     echo ❌ Build failed
@@ -144,12 +144,12 @@ echo ========================================
 echo ✅ BUILD SUCCESSFUL!
 echo ========================================
 echo.
-echo Plugin created at: build\TrimGear\win.xpl
+echo Plugin created at: build\GlideStop\win.xpl
 echo.
 echo To install:
-echo 1. Copy the entire 'TrimGear' folder to X-Plane\Resources\plugins\
+echo 1. Copy the entire 'GlideStop' folder to X-Plane\Resources\plugins\
 echo 2. Restart X-Plane
-echo 3. Configure trim commands in joystick settings
+echo 3. GlideStop automatically controls brakes - no configuration needed
 echo.
 
 if "%1" neq "nobatch" pause
