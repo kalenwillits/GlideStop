@@ -22,8 +22,6 @@ static std::unique_ptr<Config> g_config;
 static std::unique_ptr<BrakeController> g_brake_controller;
 
 // Aircraft tracking for config reloading
-static XPLMDataRef g_aircraft_icao_ref = nullptr;
-static std::string g_last_aircraft_icao;
 
 // Menu tracking
 static int g_enabled_menu_item = -1;
@@ -59,13 +57,6 @@ PLUGIN_API int XPluginStart(char* out_name, char* out_sig, char* out_desc)
     
     if (!g_brake_controller->initialize()) {
         XPLMDebugString("GlideStop: ERROR - Failed to initialize brake controller\n");
-        return 0;
-    }
-
-    // Find aircraft ICAO dataref for aircraft change detection
-    g_aircraft_icao_ref = XPLMFindDataRef("sim/aircraft/view/acf_ICAO");
-    if (!g_aircraft_icao_ref) {
-        XPLMDebugString("GlideStop: ERROR - Could not find aircraft ICAO dataref\n");
         return 0;
     }
 
@@ -109,8 +100,8 @@ PLUGIN_API int XPluginEnable(void)
 PLUGIN_API void XPluginDisable(void)
 {
     // Save current configuration when disabled
-    if (g_config && !g_last_aircraft_icao.empty()) {
-        g_config->save_config(g_last_aircraft_icao);
+    if (g_config) {
+        g_config->save_config();
     }
     
     // Ensure brake controller is disabled
@@ -171,16 +162,13 @@ static void menu_handler(void*, void* item_ref)
             update_menu_checkmarks();
             
             // Save configuration after toggle
-            if (!g_last_aircraft_icao.empty()) {
-                g_config->save_config(g_last_aircraft_icao);
-            }
+            g_config->save_config();
         }
         return;
     }
     
     if (item == MENU_RELOAD_CONFIG) {
         XPLMDebugString("GlideStop: Reloading configuration\n");
-        g_last_aircraft_icao.clear();
         load_aircraft_config();
         return;
     }
@@ -200,9 +188,7 @@ static void menu_handler(void*, void* item_ref)
                 update_menu_checkmarks();
                 
                 // Save configuration after category change
-                if (!g_last_aircraft_icao.empty()) {
-                    g_config->save_config(g_last_aircraft_icao);
-                }
+                g_config->save_config();
             }
         }
     }
@@ -221,39 +207,18 @@ static float flight_loop_callback(float, float, int, void*)
 
 static void load_aircraft_config()
 {
-    using namespace glidestop::constants;
+    XPLMDebugString("GlideStop: Loading aircraft configuration\n");
     
-    std::string aircraft_icao(XPLANE_PATH_BUFFER_SIZE, '\0');
-    int bytes_read = XPLMGetDatab(g_aircraft_icao_ref, &aircraft_icao[0], 0, aircraft_icao.size() - 1);
-    if (bytes_read > 0) {
-        aircraft_icao[bytes_read] = '\0'; // Ensure null termination
-        aircraft_icao.resize(bytes_read);
-    } else {
-        aircraft_icao.clear();
-    }
-    
-    if (aircraft_icao != g_last_aircraft_icao) {
-        // Save old config before loading new one
-        if (!g_last_aircraft_icao.empty() && g_config) {
-            g_config->save_config(g_last_aircraft_icao);
+    if (g_config) {
+        g_config->load_config();
+        
+        // Apply config to brake controller
+        if (g_brake_controller) {
+            g_brake_controller->set_enabled(g_config->is_enabled());
+            g_brake_controller->set_wake_category(g_config->get_wake_category());
         }
         
-        g_last_aircraft_icao = aircraft_icao;
-        
-        std::string log_msg = "GlideStop: Loading config for aircraft: " + aircraft_icao + "\n";
-        XPLMDebugString(log_msg.c_str());
-        
-        if (g_config) {
-            g_config->load_config(aircraft_icao);
-            
-            // Apply config to brake controller
-            if (g_brake_controller) {
-                g_brake_controller->set_enabled(g_config->is_enabled());
-                g_brake_controller->set_wake_category(g_config->get_wake_category());
-            }
-            
-            update_menu_checkmarks();
-        }
+        update_menu_checkmarks();
     }
 }
 

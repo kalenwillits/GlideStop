@@ -8,8 +8,8 @@ public:
     Config();
     ~Config();
 
-    bool load_config(const std::string& aircraft_id);
-    bool save_config(const std::string& aircraft_id) const;
+    bool load_config();
+    bool save_config() const;
 
     void set_enabled(bool enabled);
     bool is_enabled() const;
@@ -24,7 +24,7 @@ private:
     glidestop::constants::WakeCategory m_wake_category;
     
     std::string get_aircraft_directory() const;
-    std::string get_config_file_path(const std::string& aircraft_id) const;
+    std::string get_config_file_path() const;
     bool parse_config_line(const std::string& line);
     std::string generate_config_content() const;
 };
