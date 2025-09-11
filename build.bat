@@ -82,36 +82,62 @@ if !COMPILER_FOUND! == 0 (
     )
 )
 
-REM 3. Fallback: Check for cl compiler directly
+REM 3. Try Visual Studio Build Tools (lighter than full VS)
 if !COMPILER_FOUND! == 0 (
-    where cl >nul 2>&1
+    where /q cl 2>nul
     if !errorlevel! == 0 (
-        echo ✓ Visual Studio compiler found
-        set BUILD_GENERATOR="Visual Studio 17 2022"
+        echo ✅ Found Visual Studio Build Tools (MSVC compiler available)
+        set BUILD_GENERATOR=""
         set CMAKE_EXTRA_FLAGS=-A x64
         set COMPILER_FOUND=1
-        goto :compiler_detected
     )
 )
 
-REM Check for MinGW
-where g++ >nul 2>&1
-if !errorlevel! == 0 (
-    echo ✓ MinGW compiler found
-    set BUILD_GENERATOR="MinGW Makefiles"
-    set COMPILER_FOUND=1
-    goto :compiler_detected
+REM 4. Try MinGW-w64 as fallback
+if !COMPILER_FOUND! == 0 (
+    where /q gcc 2>nul
+    if !errorlevel! == 0 (
+        where /q mingw32-make 2>nul
+        if !errorlevel! == 0 (
+            echo ✅ Found MinGW-w64 (GCC compiler)
+            set BUILD_GENERATOR="MinGW Makefiles"
+            set CMAKE_EXTRA_FLAGS=-DCMAKE_MAKE_PROGRAM=mingw32-make
+            set COMPILER_FOUND=1
+        ) else (
+            where /q make 2>nul
+            if !errorlevel! == 0 (
+                echo ✅ Found MinGW-w64 (GCC compiler)
+                set BUILD_GENERATOR="MinGW Makefiles"
+                set CMAKE_EXTRA_FLAGS=""
+                set COMPILER_FOUND=1
+            )
+        )
+    )
 )
 
-:compiler_detected
+REM Handle case where no compiler was found
 if !COMPILER_FOUND! == 0 (
     echo.
-    echo ❌ No compatible compiler found!
+    echo ❌ No suitable C++ compiler found!
     echo.
-    echo Please install one of the following:
-    echo   - Visual Studio 2019 or 2022 with C++ support
-    echo   - MinGW-w64
-    echo   - MSYS2 with mingw-w64-x86_64-gcc
+    echo You may have Visual Studio Code, but you need a C++ compiler to build this project.
+    echo Visual Studio Code is a code editor, not a compiler.
+    echo.
+    echo Please install ONE of the following:
+    echo.
+    echo 1. Visual Studio 2019/2022 Community ^(free^):
+    echo    https://visualstudio.microsoft.com/downloads/
+    echo    - Install "Desktop development with C++" workload
+    echo.
+    echo 2. Build Tools for Visual Studio ^(smaller download^):
+    echo    https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
+    echo    - Install "C++ build tools" workload
+    echo.
+    echo 3. MinGW-w64 via winget ^(command line^):
+    echo    winget install mingw-w64
+    echo.
+    echo 4. MinGW-w64 via MSYS2 ^(manual^):
+    echo    https://www.msys2.org/
     echo.
     pause
     exit /b 1
@@ -131,24 +157,55 @@ echo.
 REM Change to build directory
 cd build
 
-REM Configure with CMake
-echo Configuring with CMake...
-cmake .. -G %BUILD_GENERATOR% %CMAKE_EXTRA_FLAGS% -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+REM Configure with CMake using detected compiler
+if "!BUILD_GENERATOR!" == """" (
+    echo Configuring with auto-detected generator...
+    cmake .. !CMAKE_EXTRA_FLAGS! -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+) else (
+    echo Configuring with !BUILD_GENERATOR!...
+    cmake .. -G !BUILD_GENERATOR! !CMAKE_EXTRA_FLAGS! -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+)
+
 if !errorlevel! neq 0 (
-    echo ❌ CMake configuration failed
-    cd ..
+    echo.
+    echo ❌ CMake configuration failed!
+    echo.
     pause
+    cd ..
     exit /b 1
 )
 
 REM Build the project
 echo.
-echo Building GlideStop plugin...
-cmake --build . --config %BUILD_TYPE%
+echo Building plugin...
+if "!BUILD_GENERATOR!" == """MinGW Makefiles""" (
+    REM MinGW uses make instead of cmake --build
+    if "!CMAKE_EXTRA_FLAGS!" == "-DCMAKE_MAKE_PROGRAM=mingw32-make" (
+        mingw32-make
+    ) else (
+        make
+    )
+) else (
+    cmake --build . --config %BUILD_TYPE%
+)
+
 if !errorlevel! neq 0 (
-    echo ❌ Build failed
-    cd ..
+    echo.
+    echo ❌ Build failed!
+    echo.
+    echo Troubleshooting tips:
+    if "!BUILD_GENERATOR!" == """MinGW Makefiles""" (
+        echo - Make sure MinGW-w64 is properly installed and in PATH
+        echo - Try installing via: winget install mingw-w64
+        echo - Or reinstall via MSYS2: https://www.msys2.org/
+    ) else (
+        echo - Make sure Visual Studio C++ tools are properly installed
+        echo - Try running from "Developer Command Prompt for VS"
+        echo - Reinstall Visual Studio with "Desktop development with C++" workload
+    )
+    echo.
     pause
+    cd ..
     exit /b 1
 )
 
