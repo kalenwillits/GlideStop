@@ -129,10 +129,6 @@ std::string Config::get_aircraft_directory() const {
 
 std::string Config::get_config_file_path() const {
     std::string aircraft_dir = get_aircraft_directory();
-    if (aircraft_dir.empty()) {
-        return "GlideStop.cfg"; // Fallback to current directory
-    }
-    
     return aircraft_dir + "/GlideStop.cfg";
 }
 
