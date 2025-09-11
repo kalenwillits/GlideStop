@@ -106,8 +106,8 @@ void BrakeController::update() {
     // If throttle is at idle, don't release brakes completely
     if (is_throttle_at_idle()) {
         // Maintain minimum brake pressure when throttle at idle
-        left_brake = std::max(left_brake, 0.1f * airspeed_factor);
-        right_brake = std::max(right_brake, 0.1f * airspeed_factor);
+        left_brake = std::max<float>(left_brake, 0.1f * airspeed_factor);
+        right_brake = std::max<float>(right_brake, 0.1f * airspeed_factor);
     }
     
     // Apply brake values
@@ -177,7 +177,7 @@ float BrakeController::get_airspeed_factor() const {
     float rotation_speed = get_rotation_speed();
     
     // Validate inputs
-    current_airspeed = std::max(0.0f, current_airspeed);
+    current_airspeed = std::max<float>(0.0f, current_airspeed);
     
     // Linear brake effectiveness: 100% at 0kt, 0% at rotation speed
     if (rotation_speed <= 0.0f) {
@@ -185,25 +185,25 @@ float BrakeController::get_airspeed_factor() const {
         return 1.0f;
     }
     
-    float factor = std::max(0.0f, (rotation_speed - current_airspeed) / rotation_speed);
-    return std::clamp(factor, 
-                     glidestop::constants::BRAKE_EFFECTIVENESS_MIN, 
-                     glidestop::constants::BRAKE_EFFECTIVENESS_MAX);
+    float factor = std::max<float>(0.0f, (rotation_speed - current_airspeed) / rotation_speed);
+    return std::clamp<float>(factor, 
+                            glidestop::constants::BRAKE_EFFECTIVENESS_MIN, 
+                            glidestop::constants::BRAKE_EFFECTIVENESS_MAX);
 }
 
 float BrakeController::calculate_brake_value(float pitch_input, float yaw_input, float airspeed_factor) const {
     // Validate inputs
-    pitch_input = std::clamp(pitch_input, -1.0f, 1.0f);
-    yaw_input = std::clamp(yaw_input, -1.0f, 1.0f);
-    airspeed_factor = std::clamp(airspeed_factor, 0.0f, 1.0f);
+    pitch_input = std::clamp<float>(pitch_input, -1.0f, 1.0f);
+    yaw_input = std::clamp<float>(yaw_input, -1.0f, 1.0f);
+    airspeed_factor = std::clamp<float>(airspeed_factor, 0.0f, 1.0f);
     
     // Combine pitch and yaw inputs, apply airspeed factor
     float combined_input = pitch_input + yaw_input;
     float brake_value = airspeed_factor * combined_input;
     
-    return std::clamp(brake_value, 
-                     glidestop::constants::BRAKE_EFFECTIVENESS_MIN,
-                     glidestop::constants::BRAKE_EFFECTIVENESS_MAX);
+    return std::clamp<float>(brake_value, 
+                            glidestop::constants::BRAKE_EFFECTIVENESS_MIN,
+                            glidestop::constants::BRAKE_EFFECTIVENESS_MAX);
 }
 
 float BrakeController::get_input_value(XPLMDataRef dataref) const {

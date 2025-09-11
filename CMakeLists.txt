@@ -58,22 +58,9 @@ if(XPLANE_SDK_ROOT_DIR)
         endif()
     endforeach()
     
-    # Verify platform-specific libraries exist
-    if(WIN32)
-        if(NOT EXISTS "${XPLANE_SDK_ROOT_DIR}/Libraries/Win/XPLM_64.lib")
-            message(FATAL_ERROR "❌ Windows SDK library missing: Libraries/Win/XPLM_64.lib")
-        endif()
-        if(NOT EXISTS "${XPLANE_SDK_ROOT_DIR}/Libraries/Win/XPWidgets_64.lib")
-            message(FATAL_ERROR "❌ Windows SDK library missing: Libraries/Win/XPWidgets_64.lib")
-        endif()
-    elseif(APPLE)
-        if(NOT EXISTS "${XPLANE_SDK_ROOT_DIR}/Libraries/Mac/XPLM.framework")
-            message(FATAL_ERROR "❌ macOS SDK framework missing: Libraries/Mac/XPLM.framework")
-        endif()
-        if(NOT EXISTS "${XPLANE_SDK_ROOT_DIR}/Libraries/Mac/XPWidgets.framework")
-            message(FATAL_ERROR "❌ macOS SDK framework missing: Libraries/Mac/XPWidgets.framework")
-        endif()
-    endif()
+    # Note: Platform-specific library verification removed to allow cross-compilation
+    # Libraries are linked at build time based on target platform
+    message(STATUS "✅ Skipping platform library verification (allows cross-compilation)")
     
     message(STATUS "✅ SDK verification complete")
 else()
