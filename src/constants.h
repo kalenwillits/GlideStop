@@ -27,7 +27,7 @@ constexpr int NUM_WAKE_CATEGORIES = sizeof(ROTATION_SPEEDS) / sizeof(ROTATION_SP
 constexpr WakeCategory DEFAULT_WAKE_CATEGORY = WakeCategory::MEDIUM;
 
 // Brake system parameters
-constexpr float THROTTLE_IDLE_THRESHOLD = 0.01f;  // ±1% around idle
+constexpr float THROTTLE_IDLE_THRESHOLD = 0.05f;  // ±5% around idle
 constexpr float BRAKE_EFFECTIVENESS_MAX = 1.0f;
 constexpr float BRAKE_EFFECTIVENESS_MIN = 0.0f;
 
@@ -35,6 +35,8 @@ constexpr float BRAKE_EFFECTIVENESS_MIN = 0.0f;
 enum MenuItems {
     MENU_TOGGLE_ENABLED = 2000,
     MENU_RELOAD_CONFIG = 2001,
+    MENU_TOGGLE_THROTTLE_DETECTION = 2002,
+    MENU_TOGGLE_ELEVATOR_CONTROL = 2003,
     MENU_WAKE_CATEGORY_START = 2100
 };
 

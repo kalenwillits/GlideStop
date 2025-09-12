@@ -25,6 +25,8 @@ static std::unique_ptr<BrakeController> g_brake_controller;
 
 // Menu tracking
 static int g_enabled_menu_item = -1;
+static int g_throttle_detection_menu_item = -1;
+static int g_elevator_control_menu_item = -1;
 static std::vector<int> g_wake_category_menu_items;
 
 // Forward declarations
@@ -134,6 +136,16 @@ static void create_menu_system()
     // Add separator
     XPLMAppendMenuSeparator(g_submenu_id);
     
+    // Control options section
+    XPLMAppendMenuItem(g_submenu_id, "Control Options:", nullptr, 0);
+    g_throttle_detection_menu_item = XPLMAppendMenuItem(g_submenu_id, "  Throttle Idle Detection", 
+                                                       reinterpret_cast<void*>(MENU_TOGGLE_THROTTLE_DETECTION), 1);
+    g_elevator_control_menu_item = XPLMAppendMenuItem(g_submenu_id, "  Elevator Brake Control", 
+                                                     reinterpret_cast<void*>(MENU_TOGGLE_ELEVATOR_CONTROL), 1);
+    
+    // Add separator
+    XPLMAppendMenuSeparator(g_submenu_id);
+    
     // Wake category section
     XPLMAppendMenuItem(g_submenu_id, "Wake Category:", nullptr, 0);
     g_wake_category_menu_items.reserve(NUM_WAKE_CATEGORIES);
@@ -170,6 +182,28 @@ static void menu_handler(void*, void* item_ref)
     if (item == MENU_RELOAD_CONFIG) {
         XPLMDebugString("GlideStop: Reloading configuration\n");
         load_aircraft_config();
+        return;
+    }
+    
+    if (item == MENU_TOGGLE_THROTTLE_DETECTION) {
+        if (g_brake_controller && g_config) {
+            bool new_enabled = !g_brake_controller->is_throttle_detection_enabled();
+            g_brake_controller->set_throttle_detection_enabled(new_enabled);
+            g_config->set_throttle_detection_enabled(new_enabled);
+            g_config->save_config();
+            update_menu_checkmarks();
+        }
+        return;
+    }
+    
+    if (item == MENU_TOGGLE_ELEVATOR_CONTROL) {
+        if (g_brake_controller && g_config) {
+            bool new_enabled = !g_brake_controller->is_elevator_control_enabled();
+            g_brake_controller->set_elevator_control_enabled(new_enabled);
+            g_config->set_elevator_control_enabled(new_enabled);
+            g_config->save_config();
+            update_menu_checkmarks();
+        }
         return;
     }
     
@@ -215,6 +249,8 @@ static void load_aircraft_config()
         // Apply config to brake controller
         if (g_brake_controller) {
             g_brake_controller->set_enabled(g_config->is_enabled());
+            g_brake_controller->set_throttle_detection_enabled(g_config->is_throttle_detection_enabled());
+            g_brake_controller->set_elevator_control_enabled(g_config->is_elevator_control_enabled());
             g_brake_controller->set_wake_category(g_config->get_wake_category());
         }
         
@@ -232,6 +268,21 @@ static void update_menu_checkmarks()
     if (g_enabled_menu_item >= 0) {
         const char* menu_text = g_config->is_enabled() ? "✓ Disable GlideStop" : "Enable GlideStop";
         XPLMSetMenuItemName(g_submenu_id, g_enabled_menu_item, menu_text, 0);
+    }
+    
+    // Update control option checkmarks
+    if (g_brake_controller) {
+        if (g_throttle_detection_menu_item >= 0) {
+            const char* throttle_text = g_brake_controller->is_throttle_detection_enabled() ? 
+                "✓ Throttle Idle Detection" : "  Throttle Idle Detection";
+            XPLMSetMenuItemName(g_submenu_id, g_throttle_detection_menu_item, throttle_text, 0);
+        }
+        
+        if (g_elevator_control_menu_item >= 0) {
+            const char* elevator_text = g_brake_controller->is_elevator_control_enabled() ? 
+                "✓ Elevator Brake Control" : "  Elevator Brake Control";
+            XPLMSetMenuItemName(g_submenu_id, g_elevator_control_menu_item, elevator_text, 0);
+        }
     }
     
     // Update wake category checkmarks

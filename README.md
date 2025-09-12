@@ -22,7 +22,7 @@ GlideStop is an X-Plane 12 plugin that improves aircraft brake controllability w
   - Super (A380-class): 165 kt rotation speed
 
 - **Throttle-Idle Detection**: Enhanced realism
-  - Brakes don't fully release when throttle at idle (±1%)
+  - Brakes don't fully release when throttle at idle (±5%)
   - Simulates pilot maintaining brake pressure during taxi
 
 - **Per-Aircraft Configuration**: Settings automatically saved per aircraft

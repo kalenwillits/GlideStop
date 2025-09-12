@@ -16,6 +16,12 @@ public:
     void set_enabled(bool enabled);
     bool is_enabled() const;
     
+    void set_throttle_detection_enabled(bool enabled);
+    bool is_throttle_detection_enabled() const;
+    
+    void set_elevator_control_enabled(bool enabled);
+    bool is_elevator_control_enabled() const;
+    
     void set_wake_category(glidestop::constants::WakeCategory category);
     glidestop::constants::WakeCategory get_wake_category() const;
     
@@ -37,6 +43,8 @@ private:
     DataRefs m_datarefs;
     bool m_initialized;
     bool m_enabled;
+    bool m_throttle_detection_enabled;
+    bool m_elevator_control_enabled;
     glidestop::constants::WakeCategory m_wake_category;
     
     float calculate_brake_value(float pitch_input, float yaw_input, float airspeed_factor) const;

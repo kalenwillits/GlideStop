@@ -7,6 +7,8 @@
 BrakeController::BrakeController() 
     : m_initialized(false)
     , m_enabled(false)
+    , m_throttle_detection_enabled(true)
+    , m_elevator_control_enabled(true)
     , m_wake_category(glidestop::constants::DEFAULT_WAKE_CATEGORY)
 {
     // Initialize datarefs to nullptr
@@ -91,9 +93,9 @@ void BrakeController::update() {
         return;
     }
 
-    // Get current inputs
-    float pitch_input = get_input_value(m_datarefs.yoke_pitch_ratio);
-    float yaw_input = get_input_value(m_datarefs.yoke_heading_ratio);
+    // Get current inputs - respect toggle settings
+    float pitch_input = m_elevator_control_enabled ? get_input_value(m_datarefs.yoke_pitch_ratio) : 0.0f;
+    float yaw_input = get_input_value(m_datarefs.yoke_heading_ratio);  // Rudder always enabled
     float airspeed_factor = get_airspeed_factor();
     
     // Calculate brake values based on inputs
@@ -103,8 +105,8 @@ void BrakeController::update() {
     // Right brake: pitch input + positive yaw (right rudder) 
     float right_brake = calculate_brake_value(pitch_input, yaw_input, airspeed_factor);
     
-    // If throttle is at idle, don't release brakes completely
-    if (is_throttle_at_idle()) {
+    // If throttle idle detection is enabled and throttle is at idle, don't release brakes completely
+    if (m_throttle_detection_enabled && is_throttle_at_idle()) {
         // Maintain minimum brake pressure when throttle at idle
         left_brake = std::max<float>(left_brake, 0.1f * airspeed_factor);
         right_brake = std::max<float>(right_brake, 0.1f * airspeed_factor);
@@ -226,4 +228,26 @@ void BrakeController::set_brake_override(bool override) {
     if (m_datarefs.override_toe_brakes) {
         XPLMSetDatai(m_datarefs.override_toe_brakes, override ? 1 : 0);
     }
+}
+
+void BrakeController::set_throttle_detection_enabled(bool enabled) {
+    m_throttle_detection_enabled = enabled;
+    std::string log_msg = "GlideStop: Throttle idle detection " + 
+                          std::string(enabled ? "enabled" : "disabled") + "\n";
+    XPLMDebugString(log_msg.c_str());
+}
+
+bool BrakeController::is_throttle_detection_enabled() const {
+    return m_throttle_detection_enabled;
+}
+
+void BrakeController::set_elevator_control_enabled(bool enabled) {
+    m_elevator_control_enabled = enabled;
+    std::string log_msg = "GlideStop: Elevator brake control " + 
+                          std::string(enabled ? "enabled" : "disabled") + "\n";
+    XPLMDebugString(log_msg.c_str());
+}
+
+bool BrakeController::is_elevator_control_enabled() const {
+    return m_elevator_control_enabled;
 }

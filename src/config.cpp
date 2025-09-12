@@ -14,6 +14,8 @@ Config::~Config() {
 
 void Config::reset_to_defaults() {
     m_enabled = false;
+    m_throttle_detection_enabled = true;
+    m_elevator_control_enabled = true;
     m_wake_category = glidestop::constants::DEFAULT_WAKE_CATEGORY;
 }
 
@@ -96,6 +98,22 @@ void Config::set_enabled(bool enabled) {
 
 bool Config::is_enabled() const {
     return m_enabled;
+}
+
+void Config::set_throttle_detection_enabled(bool enabled) {
+    m_throttle_detection_enabled = enabled;
+}
+
+bool Config::is_throttle_detection_enabled() const {
+    return m_throttle_detection_enabled;
+}
+
+void Config::set_elevator_control_enabled(bool enabled) {
+    m_elevator_control_enabled = enabled;
+}
+
+bool Config::is_elevator_control_enabled() const {
+    return m_elevator_control_enabled;
 }
 
 void Config::set_wake_category(glidestop::constants::WakeCategory category) {
@@ -231,6 +249,10 @@ bool Config::parse_config_line(const std::string& line) {
     
     if (key == "enabled") {
         m_enabled = (value == "true" || value == "1");
+    } else if (key == "throttle_detection") {
+        m_throttle_detection_enabled = (value == "true" || value == "1");
+    } else if (key == "elevator_control") {
+        m_elevator_control_enabled = (value == "true" || value == "1");
     } else if (key == "wake_category") {
         try {
             int category_index = std::stoi(value);
@@ -269,6 +291,8 @@ std::string Config::generate_config_content() const {
     content << "\n";
     
     content << "enabled=" << (m_enabled ? "true" : "false") << "\n";
+    content << "throttle_detection=" << (m_throttle_detection_enabled ? "true" : "false") << "\n";
+    content << "elevator_control=" << (m_elevator_control_enabled ? "true" : "false") << "\n";
     content << "wake_category=" << static_cast<int>(m_wake_category) << "\n";
     
     return content.str();
