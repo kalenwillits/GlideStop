@@ -4,12 +4,14 @@
 #include <algorithm>
 #include <cmath>
 
-BrakeController::BrakeController() 
+BrakeController::BrakeController()
     : m_initialized(false)
     , m_enabled(false)
     , m_throttle_detection_enabled(true)
     , m_elevator_control_enabled(true)
     , m_wake_category(glidestop::constants::DEFAULT_WAKE_CATEGORY)
+    , m_previous_left_brake(0.0f)
+    , m_previous_right_brake(0.0f)
 {
     // Initialize datarefs to nullptr
     m_datarefs.override_toe_brakes = nullptr;
@@ -96,22 +98,35 @@ void BrakeController::update() {
     // Get current inputs - respect toggle settings
     float pitch_input = m_elevator_control_enabled ? get_input_value(m_datarefs.yoke_pitch_ratio) : 0.0f;
     float yaw_input = get_input_value(m_datarefs.yoke_heading_ratio);  // Rudder always enabled
-    float airspeed_factor = get_airspeed_factor();
-    
-    // Calculate brake values based on inputs
+
+    // Calculate raw brake values from inputs (0.0-1.0 range, no airspeed factor)
     // Left brake: pitch input + negative yaw (left rudder)
-    float left_brake = calculate_brake_value(pitch_input, -yaw_input, airspeed_factor);
-    
-    // Right brake: pitch input + positive yaw (right rudder) 
-    float right_brake = calculate_brake_value(pitch_input, yaw_input, airspeed_factor);
-    
-    // If throttle idle detection is enabled and throttle is at idle, don't release brakes completely
+    float left_brake = calculate_brake_value(pitch_input, -yaw_input);
+
+    // Right brake: pitch input + positive yaw (right rudder)
+    float right_brake = calculate_brake_value(pitch_input, yaw_input);
+
+    // Apply throttle idle brake hold logic on RAW values (CORRECTED BEHAVIOR)
     if (m_throttle_detection_enabled && is_throttle_at_idle()) {
-        // Maintain minimum brake pressure when throttle at idle
-        left_brake = std::max<float>(left_brake, 0.1f * airspeed_factor);
-        right_brake = std::max<float>(right_brake, 0.1f * airspeed_factor);
+        // When throttle is AT idle: brakes can only increase, never decrease (hold position)
+        left_brake = std::max<float>(left_brake, m_previous_left_brake);
+        right_brake = std::max<float>(right_brake, m_previous_right_brake);
     }
-    
+    // When throttle is ABOVE idle: brakes work normally (no special logic)
+
+    // Store RAW brake values for next iteration (before airspeed factor)
+    m_previous_left_brake = left_brake;
+    m_previous_right_brake = right_brake;
+
+    // Apply airspeed factor LAST (as specified)
+    float airspeed_factor = get_airspeed_factor();
+    left_brake *= airspeed_factor;
+    right_brake *= airspeed_factor;
+
+    // CRITICAL: Clamp final brake values to prevent unnatural forces
+    left_brake = std::clamp<float>(left_brake, 0.0f, 1.0f);
+    right_brake = std::clamp<float>(right_brake, 0.0f, 1.0f);
+
     // Apply brake values
     XPLMSetDataf(m_datarefs.left_brake_ratio, left_brake);
     XPLMSetDataf(m_datarefs.right_brake_ratio, right_brake);
@@ -130,6 +145,9 @@ void BrakeController::set_enabled(bool enabled) {
             // Release brakes when disabling
             XPLMSetDataf(m_datarefs.left_brake_ratio, 0.0f);
             XPLMSetDataf(m_datarefs.right_brake_ratio, 0.0f);
+            // Reset brake hold state
+            m_previous_left_brake = 0.0f;
+            m_previous_right_brake = 0.0f;
         }
         
         std::string log_msg = "GlideStop: " + std::string(enabled ? "Enabled" : "Disabled") + "\n";
@@ -193,19 +211,15 @@ float BrakeController::get_airspeed_factor() const {
                             glidestop::constants::BRAKE_EFFECTIVENESS_MAX);
 }
 
-float BrakeController::calculate_brake_value(float pitch_input, float yaw_input, float airspeed_factor) const {
+float BrakeController::calculate_brake_value(float pitch_input, float yaw_input) const {
     // Validate inputs
     pitch_input = std::clamp<float>(pitch_input, -1.0f, 1.0f);
     yaw_input = std::clamp<float>(yaw_input, -1.0f, 1.0f);
-    airspeed_factor = std::clamp<float>(airspeed_factor, 0.0f, 1.0f);
-    
-    // Combine pitch and yaw inputs, apply airspeed factor
+
+    // Combine pitch and yaw inputs (raw brake value without airspeed factor)
     float combined_input = pitch_input + yaw_input;
-    float brake_value = airspeed_factor * combined_input;
-    
-    return std::clamp<float>(brake_value, 
-                            glidestop::constants::BRAKE_EFFECTIVENESS_MIN,
-                            glidestop::constants::BRAKE_EFFECTIVENESS_MAX);
+
+    return std::clamp<float>(combined_input, 0.0f, 1.0f);
 }
 
 float BrakeController::get_input_value(XPLMDataRef dataref) const {

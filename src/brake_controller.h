@@ -46,8 +46,12 @@ private:
     bool m_throttle_detection_enabled;
     bool m_elevator_control_enabled;
     glidestop::constants::WakeCategory m_wake_category;
+
+    // State tracking for throttle brake hold feature
+    float m_previous_left_brake;
+    float m_previous_right_brake;
     
-    float calculate_brake_value(float pitch_input, float yaw_input, float airspeed_factor) const;
+    float calculate_brake_value(float pitch_input, float yaw_input) const;
     float get_input_value(XPLMDataRef dataref) const;
     bool is_throttle_at_idle() const;
     void set_brake_override(bool override);
