@@ -200,6 +200,9 @@ bool Config::create_default_config() const {
         case glidestop::constants::WakeCategory::SUPER:
             wake_category_str = "SUPER";
             break;
+        case glidestop::constants::WakeCategory::ULTRALIGHT:
+            wake_category_str = "ULTRALIGHT";
+            break;
         case glidestop::constants::WakeCategory::COUNT:
             // Should never happen, but handle it gracefully
             wake_category_str = "MEDIUM";
@@ -288,6 +291,7 @@ std::string Config::generate_config_content() const {
     content << "# 1 = Medium (7,000-136,000 kg) - Rotation speed: 130 kt\n";
     content << "# 2 = Heavy (136,000+ kg) - Rotation speed: 155 kt\n";
     content << "# 3 = Super (A380-class) - Rotation speed: 165 kt\n";
+    content << "# 4 = Ultralight (≤115 kg) - Rotation speed: 30 kt\n";
     content << "\n";
     
     content << "enabled=" << (m_enabled ? "true" : "false") << "\n";

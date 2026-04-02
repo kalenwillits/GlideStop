@@ -9,10 +9,11 @@ constexpr int XPLANE_PATH_BUFFER_SIZE = 512;
 // Wake turbulence categories and rotation speeds
 enum class WakeCategory {
     LIGHT = 0,    // L - Light aircraft (≤7,000 kg)
-    MEDIUM = 1,   // M - Medium aircraft (7,000-136,000 kg)  
+    MEDIUM = 1,   // M - Medium aircraft (7,000-136,000 kg)
     HEAVY = 2,    // H - Heavy aircraft (136,000+ kg)
     SUPER = 3,    // J - Super aircraft (A380-class)
-    COUNT = 4
+    ULTRALIGHT = 4, // U - Ultralight aircraft (≤115 kg / 254 lbs)
+    COUNT = 5
 };
 
 // Rotation speeds in knots for each wake category
@@ -20,7 +21,8 @@ constexpr float ROTATION_SPEEDS[] = {
     65.0f,   // Light - Small GA/turboprops
     130.0f,  // Medium - Regional jets/smaller airliners
     155.0f,  // Heavy - Large transport jets
-    165.0f   // Super - A380-class
+    165.0f,  // Super - A380-class
+    30.0f    // Ultralight - FAR Part 103
 };
 
 constexpr int NUM_WAKE_CATEGORIES = sizeof(ROTATION_SPEEDS) / sizeof(ROTATION_SPEEDS[0]);
@@ -43,13 +45,14 @@ enum MenuItems {
 // Wake category names for UI
 constexpr const char* WAKE_CATEGORY_NAMES[] = {
     "Light (≤7,000 kg)",
-    "Medium (7,000-136,000 kg)", 
+    "Medium (7,000-136,000 kg)",
     "Heavy (136,000+ kg)",
-    "Super (A380-class)"
+    "Super (A380-class)",
+    "Ultralight (≤115 kg)"
 };
 
 constexpr const char* WAKE_CATEGORY_SHORT_NAMES[] = {
-    "L", "M", "H", "J"
+    "L", "M", "H", "J", "U"
 };
 
 }
