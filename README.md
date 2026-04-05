@@ -246,7 +246,3 @@ The plugin writes detailed logging to X-Plane's Log.txt file with prefix "GlideS
 - X-Plane 12
 - Compatible flight controls (rudder pedals recommended)
 - Windows 10+, macOS 10.14+, or Linux with X11
-
-## License
-
-This project follows the same licensing as the TrimGear reference project.
