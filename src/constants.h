@@ -30,6 +30,7 @@ constexpr WakeCategory DEFAULT_WAKE_CATEGORY = WakeCategory::MEDIUM;
 
 // Brake system parameters
 constexpr float THROTTLE_IDLE_THRESHOLD = 0.05f;  // ±5% around idle
+constexpr float RUDDER_DEAD_ZONE = 0.05f;         // ±5% rudder dead zone
 constexpr float BRAKE_EFFECTIVENESS_MAX = 1.0f;
 constexpr float BRAKE_EFFECTIVENESS_MIN = 0.0f;
 

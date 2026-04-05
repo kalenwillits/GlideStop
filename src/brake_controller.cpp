@@ -98,6 +98,9 @@ void BrakeController::update() {
     // Get current inputs - respect toggle settings
     float pitch_input = m_elevator_control_enabled ? get_input_value(m_datarefs.yoke_pitch_ratio) : 0.0f;
     float yaw_input = get_input_value(m_datarefs.yoke_heading_ratio);  // Rudder always enabled
+    if (std::abs(yaw_input) < glidestop::constants::RUDDER_DEAD_ZONE) {
+        yaw_input = 0.0f;
+    }
 
     // Calculate raw brake values from inputs (0.0-1.0 range, no airspeed factor)
     // Left brake: pitch input + negative yaw (left rudder)
