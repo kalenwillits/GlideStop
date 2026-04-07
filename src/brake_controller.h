@@ -10,22 +10,21 @@ public:
 
     bool initialize();
     void cleanup();
-    
+
     void update();
-    
+
     void set_enabled(bool enabled);
     bool is_enabled() const;
-    
+
     void set_throttle_detection_enabled(bool enabled);
     bool is_throttle_detection_enabled() const;
-    
+
     void set_elevator_control_enabled(bool enabled);
     bool is_elevator_control_enabled() const;
-    
-    void set_wake_category(glidestop::constants::WakeCategory category);
-    glidestop::constants::WakeCategory get_wake_category() const;
-    
-    float get_rotation_speed() const;
+
+    void set_rotation_speed(int speed);
+    int get_rotation_speed() const;
+
     float get_current_airspeed() const;
     float get_airspeed_factor() const;
 
@@ -45,12 +44,12 @@ private:
     bool m_enabled;
     bool m_throttle_detection_enabled;
     bool m_elevator_control_enabled;
-    glidestop::constants::WakeCategory m_wake_category;
+    int m_rotation_speed;
 
     // State tracking for throttle brake hold feature
     float m_previous_left_brake;
     float m_previous_right_brake;
-    
+
     float calculate_brake_value(float pitch_input, float yaw_input) const;
     float get_input_value(XPLMDataRef dataref) const;
     bool is_throttle_at_idle() const;

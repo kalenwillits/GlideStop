@@ -13,15 +13,15 @@ public:
 
     void set_enabled(bool enabled);
     bool is_enabled() const;
-    
+
     void set_throttle_detection_enabled(bool enabled);
     bool is_throttle_detection_enabled() const;
-    
+
     void set_elevator_control_enabled(bool enabled);
     bool is_elevator_control_enabled() const;
-    
-    void set_wake_category(glidestop::constants::WakeCategory category);
-    glidestop::constants::WakeCategory get_wake_category() const;
+
+    void set_rotation_speed(int speed);
+    int get_rotation_speed() const;
 
     void reset_to_defaults();
 
@@ -29,8 +29,8 @@ private:
     bool m_enabled;
     bool m_throttle_detection_enabled;
     bool m_elevator_control_enabled;
-    glidestop::constants::WakeCategory m_wake_category;
-    
+    int m_rotation_speed;
+
     std::string get_aircraft_directory() const;
     std::string get_config_file_path() const;
     bool create_default_config() const;
