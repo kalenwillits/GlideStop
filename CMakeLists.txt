@@ -1,8 +1,20 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 project(GlideStop VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Static linking
+if (MSVC)
+    # Use static runtime instead of requiring VC++ Redistributable
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+if (UNIX AND NOT APPLE)
+    add_link_options(-static-libgcc -static-libstdc++)
+endif()
+if (APPLE)
+    set(CMAKE_MACOSX_RPATH ON)
+endif()
 
 # Platform-specific settings
 if(WIN32)
