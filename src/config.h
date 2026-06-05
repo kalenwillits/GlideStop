@@ -20,6 +20,9 @@ public:
     void set_elevator_control_enabled(bool enabled);
     bool is_elevator_control_enabled() const;
 
+    void set_differential_braking_enabled(bool enabled);
+    bool is_differential_braking_enabled() const;
+
     void set_rotation_speed(int speed);
     int get_rotation_speed() const;
 
@@ -29,6 +32,7 @@ private:
     bool m_enabled;
     bool m_throttle_detection_enabled;
     bool m_elevator_control_enabled;
+    bool m_differential_braking_enabled;
     int m_rotation_speed;
 
     std::string get_aircraft_directory() const;

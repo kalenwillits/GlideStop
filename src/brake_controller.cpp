@@ -9,6 +9,7 @@ BrakeController::BrakeController()
     , m_enabled(false)
     , m_throttle_detection_enabled(true)
     , m_elevator_control_enabled(true)
+    , m_differential_braking_enabled(true)
     , m_rotation_speed(glidestop::constants::DEFAULT_ROTATION_SPEED)
     , m_previous_left_brake(0.0f)
     , m_previous_right_brake(0.0f)
@@ -97,7 +98,9 @@ void BrakeController::update() {
 
     // Get current inputs - respect toggle settings
     float pitch_input = m_elevator_control_enabled ? get_input_value(m_datarefs.yoke_pitch_ratio) : 0.0f;
-    float yaw_input = get_input_value(m_datarefs.yoke_heading_ratio);  // Rudder always enabled
+
+    // Differential braking applies left/right brake bias from rudder input
+    float yaw_input = m_differential_braking_enabled ? get_input_value(m_datarefs.yoke_heading_ratio) : 0.0f;
     if (std::abs(yaw_input) < glidestop::constants::RUDDER_DEAD_ZONE) {
         yaw_input = 0.0f;
     }
@@ -255,4 +258,15 @@ void BrakeController::set_elevator_control_enabled(bool enabled) {
 
 bool BrakeController::is_elevator_control_enabled() const {
     return m_elevator_control_enabled;
+}
+
+void BrakeController::set_differential_braking_enabled(bool enabled) {
+    m_differential_braking_enabled = enabled;
+    std::string log_msg = "GlideStop: Differential braking " +
+                          std::string(enabled ? "enabled" : "disabled") + "\n";
+    XPLMDebugString(log_msg.c_str());
+}
+
+bool BrakeController::is_differential_braking_enabled() const {
+    return m_differential_braking_enabled;
 }

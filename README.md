@@ -161,10 +161,13 @@ X-Plane 12/
 
 ### Menu System
 
-The plugin menu provides:
-- **Enable/Disable Toggle**: Turn GlideStop on/off
+The plugin menu provides four toggles plus rotation speed control:
+- **Enable GlideStop**: Global on/off for the plugin
+- **Differential Braking**: Apply left/right brake bias from rudder input (ground steering)
+- **Throttle Idle Brake**: Hold brake pressure when the throttle is at idle
+- **Elevator Braking**: Apply braking from elevator (pitch) input
+- **Rotation Speed (kt)**: Adjust the speed at which braking fades to zero effectiveness
 - **Reload Configuration**: Manually reload settings for current aircraft
-- **Wake Category Selection**: Choose from Light/Medium/Heavy/Super categories
 
 ### Configuration Files
 

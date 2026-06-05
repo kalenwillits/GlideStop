@@ -17,6 +17,7 @@ void Config::reset_to_defaults() {
     m_enabled = false;
     m_throttle_detection_enabled = true;
     m_elevator_control_enabled = true;
+    m_differential_braking_enabled = true;
     m_rotation_speed = glidestop::constants::DEFAULT_ROTATION_SPEED;
 }
 
@@ -117,6 +118,14 @@ bool Config::is_elevator_control_enabled() const {
     return m_elevator_control_enabled;
 }
 
+void Config::set_differential_braking_enabled(bool enabled) {
+    m_differential_braking_enabled = enabled;
+}
+
+bool Config::is_differential_braking_enabled() const {
+    return m_differential_braking_enabled;
+}
+
 void Config::set_rotation_speed(int speed) {
     m_rotation_speed = std::clamp(speed,
         glidestop::constants::MIN_ROTATION_SPEED,
@@ -181,9 +190,15 @@ bool Config::create_default_config() const {
     file << "# This file stores settings for the GlideStop brake assistance system.\n";
     file << "# \n";
     file << "# enabled: true/false - Whether GlideStop is active\n";
+    file << "# differential_braking: true/false - Apply left/right brake bias from rudder input\n";
+    file << "# throttle_detection: true/false - Hold brakes when throttle is at idle\n";
+    file << "# elevator_control: true/false - Apply braking from elevator (pitch) input\n";
     file << "# rotation_speed: integer (knots) - Speed at which brakes reach zero effectiveness\n";
     file << "# \n";
     file << "enabled=false\n";
+    file << "differential_braking=true\n";
+    file << "throttle_detection=true\n";
+    file << "elevator_control=true\n";
     file << "rotation_speed=" << glidestop::constants::DEFAULT_ROTATION_SPEED << "\n";
 
     file.close();
@@ -231,6 +246,8 @@ bool Config::parse_config_line(const std::string& line) {
         m_throttle_detection_enabled = (value == "true" || value == "1");
     } else if (key == "elevator_control") {
         m_elevator_control_enabled = (value == "true" || value == "1");
+    } else if (key == "differential_braking") {
+        m_differential_braking_enabled = (value == "true" || value == "1");
     } else if (key == "rotation_speed") {
         try {
             int speed = std::stoi(value);
@@ -276,6 +293,7 @@ std::string Config::generate_config_content() const {
     content << "\n";
 
     content << "enabled=" << (m_enabled ? "true" : "false") << "\n";
+    content << "differential_braking=" << (m_differential_braking_enabled ? "true" : "false") << "\n";
     content << "throttle_detection=" << (m_throttle_detection_enabled ? "true" : "false") << "\n";
     content << "elevator_control=" << (m_elevator_control_enabled ? "true" : "false") << "\n";
     content << "rotation_speed=" << m_rotation_speed << "\n";

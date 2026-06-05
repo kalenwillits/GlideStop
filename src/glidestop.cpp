@@ -23,6 +23,7 @@ static std::unique_ptr<BrakeController> g_brake_controller;
 
 // Menu tracking
 static int g_enabled_menu_item = -1;
+static int g_differential_braking_menu_item = -1;
 static int g_throttle_detection_menu_item = -1;
 static int g_elevator_control_menu_item = -1;
 static int g_rotation_speed_display_item = -1;
@@ -124,22 +125,19 @@ static void create_menu_system()
 
     if (!g_submenu_id) return;
 
-    // Add enable/disable toggle
+    // Global enable/disable toggle
     g_enabled_menu_item = XPLMAppendMenuItem(g_submenu_id, "Enable GlideStop",
                                            reinterpret_cast<void*>(MENU_TOGGLE_ENABLED), 1);
-
-    // Add reload config option
-    XPLMAppendMenuItem(g_submenu_id, "Reload Configuration",
-                      reinterpret_cast<void*>(MENU_RELOAD_CONFIG), 1);
 
     // Add separator
     XPLMAppendMenuSeparator(g_submenu_id);
 
-    // Control options section
-    XPLMAppendMenuItem(g_submenu_id, "Control Options:", nullptr, 0);
-    g_throttle_detection_menu_item = XPLMAppendMenuItem(g_submenu_id, "  Throttle Idle Detection",
+    // Brake feature toggles
+    g_differential_braking_menu_item = XPLMAppendMenuItem(g_submenu_id, "Differential Braking",
+                                                         reinterpret_cast<void*>(MENU_TOGGLE_DIFFERENTIAL_BRAKING), 1);
+    g_throttle_detection_menu_item = XPLMAppendMenuItem(g_submenu_id, "Throttle Idle Brake",
                                                        reinterpret_cast<void*>(MENU_TOGGLE_THROTTLE_DETECTION), 1);
-    g_elevator_control_menu_item = XPLMAppendMenuItem(g_submenu_id, "  Elevator Brake Control",
+    g_elevator_control_menu_item = XPLMAppendMenuItem(g_submenu_id, "Elevator Braking",
                                                      reinterpret_cast<void*>(MENU_TOGGLE_ELEVATOR_CONTROL), 1);
 
     // Add separator
@@ -157,6 +155,13 @@ static void create_menu_system()
                       reinterpret_cast<void*>(MENU_ROTATION_SPEED_DOWN_1), 1);
     XPLMAppendMenuItem(g_submenu_id, "  -10",
                       reinterpret_cast<void*>(MENU_ROTATION_SPEED_DOWN_10), 1);
+
+    // Add separator
+    XPLMAppendMenuSeparator(g_submenu_id);
+
+    // Reload config option
+    XPLMAppendMenuItem(g_submenu_id, "Reload Configuration",
+                      reinterpret_cast<void*>(MENU_RELOAD_CONFIG), 1);
 }
 
 static void menu_handler(void*, void* item_ref)
@@ -181,6 +186,17 @@ static void menu_handler(void*, void* item_ref)
     if (item == MENU_RELOAD_CONFIG) {
         XPLMDebugString("GlideStop: Reloading configuration\n");
         load_aircraft_config();
+        return;
+    }
+
+    if (item == MENU_TOGGLE_DIFFERENTIAL_BRAKING) {
+        if (g_brake_controller && g_config) {
+            bool new_enabled = !g_brake_controller->is_differential_braking_enabled();
+            g_brake_controller->set_differential_braking_enabled(new_enabled);
+            g_config->set_differential_braking_enabled(new_enabled);
+            g_config->save_config();
+            update_menu_checkmarks();
+        }
         return;
     }
 
@@ -256,6 +272,7 @@ static void load_aircraft_config()
         // Apply config to brake controller
         if (g_brake_controller) {
             g_brake_controller->set_enabled(g_config->is_enabled());
+            g_brake_controller->set_differential_braking_enabled(g_config->is_differential_braking_enabled());
             g_brake_controller->set_throttle_detection_enabled(g_config->is_throttle_detection_enabled());
             g_brake_controller->set_elevator_control_enabled(g_config->is_elevator_control_enabled());
             g_brake_controller->set_rotation_speed(g_config->get_rotation_speed());
@@ -275,17 +292,23 @@ static void update_menu_checkmarks()
         XPLMSetMenuItemName(g_submenu_id, g_enabled_menu_item, menu_text, 0);
     }
 
-    // Update control option checkmarks
+    // Update brake feature toggle checkmarks
     if (g_brake_controller) {
+        if (g_differential_braking_menu_item >= 0) {
+            const char* differential_text = g_brake_controller->is_differential_braking_enabled() ?
+                "✓ Differential Braking" : "  Differential Braking";
+            XPLMSetMenuItemName(g_submenu_id, g_differential_braking_menu_item, differential_text, 0);
+        }
+
         if (g_throttle_detection_menu_item >= 0) {
             const char* throttle_text = g_brake_controller->is_throttle_detection_enabled() ?
-                "✓ Throttle Idle Detection" : "  Throttle Idle Detection";
+                "✓ Throttle Idle Brake" : "  Throttle Idle Brake";
             XPLMSetMenuItemName(g_submenu_id, g_throttle_detection_menu_item, throttle_text, 0);
         }
 
         if (g_elevator_control_menu_item >= 0) {
             const char* elevator_text = g_brake_controller->is_elevator_control_enabled() ?
-                "✓ Elevator Brake Control" : "  Elevator Brake Control";
+                "✓ Elevator Braking" : "  Elevator Braking";
             XPLMSetMenuItemName(g_submenu_id, g_elevator_control_menu_item, elevator_text, 0);
         }
     }
